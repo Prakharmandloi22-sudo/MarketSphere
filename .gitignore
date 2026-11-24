@@ -1,0 +1,19 @@
+# MarketSphere - Multi-Vendor Commerce, Inventory & Order Platform
+
+node_modules/
+.next/
+dist/
+build/
+coverage/
+*.log
+.env
+.env.local
+.env.production
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.sqlite
+uploads/*
+!uploads/.gitkeep

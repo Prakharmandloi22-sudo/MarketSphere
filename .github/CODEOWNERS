@@ -1,0 +1,22 @@
+# MarketSphere Code Owners Definition
+# Specifies individuals or teams responsible for code review
+
+# Global fallback
+* @marketsphere-core-team
+
+# Backend commerce modules & DB migrations
+/backend/src/modules/order/ @marketsphere-commerce-lead
+/backend/src/modules/inventory/ @marketsphere-inventory-lead
+/backend/src/modules/payment/ @marketsphere-security-lead
+/backend/src/database/migrations/ @marketsphere-dba-lead
+
+# Python Pricing & Recommendation service
+/python-service/ @marketsphere-data-lead
+
+# Frontend UI & Customer Storefront
+/frontend/ @marketsphere-frontend-lead
+
+# DevOps & CI/CD Pipelines
+/.github/workflows/ @marketsphere-devops-lead
+/docker/ @marketsphere-devops-lead
+/docker-compose.yml @marketsphere-devops-lead

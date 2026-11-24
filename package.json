@@ -1,0 +1,33 @@
+{
+  "name": "marketsphere",
+  "version": "1.0.0",
+  "description": "MarketSphere - Advanced Multi-Vendor Commerce, Inventory & Order Platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "start:backend": "npm --prefix backend start",
+    "dev:backend": "npm --prefix backend run dev",
+    "test:backend": "npm --prefix backend test",
+    "start:frontend": "npm --prefix frontend start",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test:frontend": "npm --prefix frontend test",
+    "test:python": "pytest python-service/tests -v",
+    "test:all": "npm --prefix backend test && pytest python-service/tests -v",
+    "test:incident": "node tests/incident-simulation.test.js"
+  },
+  "keywords": [
+    "ecommerce",
+    "multi-vendor",
+    "marketplace",
+    "inventory-reservation",
+    "concurrency",
+    "fastapi",
+    "nextjs",
+    "express"
+  ],
+  "author": "MarketSphere Engineering Team",
+  "license": "MIT"
+}
