@@ -1,0 +1,147 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "MarketSphere Commerce & Inventory API",
+    "description": "Multi-Vendor E-Commerce Platform REST API with real-time stock reservations, seller onboarding, payment webhooks, and order lifecycle management.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://api.marketsphere.io/api/v1",
+      "description": "Production Cloud VM"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user account",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "fullName"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "customer@example.com" },
+                  "password": { "type": "string", "minLength": 8, "example": "SecurePass123!" },
+                  "fullName": { "type": "string", "example": "Jane Doe" },
+                  "role": { "type": "string", "enum": ["customer", "seller", "warehouse", "support", "admin"], "default": "customer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully with JWT access and refresh tokens" },
+          "409": { "description": "User with email already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate with email and password",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "admin@marketsphere.local" },
+                  "password": { "type": "string", "example": "Password123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Authentication successful" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/catalog/products": {
+      "get": {
+        "summary": "Search and filter product catalog",
+        "tags": ["Catalog"],
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" }, "description": "Keyword search query" },
+          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Category slug filter" },
+          { "name": "inStock", "in": "query", "schema": { "type": "boolean" }, "description": "Filter in-stock products only" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["newest", "price_asc", "price_desc", "rating"] } }
+        ],
+        "responses": {
+          "200": { "description": "List of matching products with variant and stock information" }
+        }
+      }
+    },
+    "/checkout/create-order": {
+      "post": {
+        "summary": "Create order and atomically reserve inventory",
+        "tags": ["Checkout & Inventory"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["sku", "quantity"],
+                      "properties": {
+                        "sku": { "type": "string", "example": "HEADPHONE-BLK-01" },
+                        "quantity": { "type": "integer", "minimum": 1, "example": 1 }
+                      }
+                    }
+                  },
+                  "promoCode": { "type": "string", "example": "WELCOME10" },
+                  "idempotencyKey": { "type": "string", "example": "idemp_checkout_12345" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Order created in RESERVED status with 10-minute stock reservation token" },
+          "409": { "description": "Out of stock conflict error" }
+        }
+      }
+    },
+    "/payments/webhook": {
+      "post": {
+        "summary": "Stripe-compatible payment webhook receiver with event deduplication",
+        "tags": ["Payments & Idempotency"],
+        "parameters": [
+          { "name": "stripe-signature", "in": "header", "schema": { "type": "string" } },
+          { "name": "x-event-id", "in": "header", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Event processed or deduplicated safely" },
+          "400": { "description": "Invalid HMAC signature or malformed payload" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "info": {
+    "name": "MarketSphere Platform Postman Collection",
+    "description": "Comprehensive API request suite for MarketSphere Multi-Vendor Platform, including Auth, Catalog, Checkout, Concurrency, and Idempotency tests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "orderId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Readiness",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "2. Login Customer",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set('token', jsonData.data.accessToken);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"customer1@marketsphere.local\",\n  \"password\": \"Password123!\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Search Products (Facet Filter)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/catalog/products?category=electronics&inStock=true"
+      }
+    },
+    {
+      "name": "4. Preview Checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/checkout/preview",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [{ \"sku\": \"HEADPHONE-BLK-01\", \"quantity\": 1 }],\n  \"promoCode\": \"WELCOME10\"\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Create Order & Reserve Stock",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.order) {",
+              "    pm.collectionVariables.set('orderId', jsonData.data.order.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/checkout/create-order",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [{ \"sku\": \"HEADPHONE-BLK-01\", \"quantity\": 1 }],\n  \"promoCode\": \"WELCOME10\"\n}"
+        }
+      }
+    },
+    {
+      "name": "6. Payment Webhook (Idempotent)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "x-event-id", "value": "evt_postman_test_1" }
+        ],
+        "url": "{{baseUrl}}/payments/webhook",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": \"evt_postman_test_1\",\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"orderId\": \"{{orderId}}\",\n      \"amount\": 199.99\n    }\n  }\n}"
+        }
+      }
+    }
+  ]
+}
